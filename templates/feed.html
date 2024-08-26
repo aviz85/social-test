@@ -3,7 +3,7 @@
 {% block content %}
 <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-6">
     <h1 class="text-2xl font-bold mb-4">ברוך הבא, {{ user.name }}!</h1>
-    <form method="POST" action="{{ url_for('feed', user_id=user.id) }}">
+    <form method="POST" action="{{ url_for('feed', user_id=user.id) }}" class="max-w-full">
         <textarea name="content" rows="3" class="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="מה בראש שלך?"></textarea>
         <button type="submit" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">פרסם</button>
     </form>
