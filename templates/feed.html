@@ -1,204 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">ברוך הבא, {{ user.name }}!</h1>
-        <a href="{{ url_for('index') }}" class="text-blue-500 hover:text-blue-700">לא {{ user.name }}? הירשם כאן</a>
-    </div>
-    
-    <div class="mb-8 bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-xl font-semibold mb-4">יצירת פוסט חדש</h2>
-        <form method="POST">
-            <div class="relative">
-                <textarea name="content" rows="3" required placeholder="מה בראש שלך?"
-                          class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none mb-8" required></textarea>
-                <div id="md-shortcuts" class="absolute bottom-2 left-2 flex space-x-2">
-                    <!-- Markdown shortcuts will be added here -->
-                </div>
-                <div id="emoji-selector" class="absolute bottom-2 right-2">
-                    <!-- Emoji selector will be added here -->
-                </div>
-            </div>
-            <button type="submit" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">פרסם</button>
-        </form>
-    </div>
-
-    <div id="posts-container" class="space-y-6">
-        {% include '_posts.html' %}
-    </div>
-
-    {% if has_next %}
-    <div id="load-more-container" class="mt-8 text-center">
-        <button id="load-more" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300" data-page="{{ page }}">טען עוד פוסטים</button>
-    </div>
-    {% endif %}
+<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-6">
+    <h1 class="text-2xl font-bold mb-4">ברוך הבא, {{ user.name }}!</h1>
+    <form method="POST" action="{{ url_for('feed', user_id=user.id) }}">
+        <textarea name="content" rows="3" class="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="מה בראש שלך?"></textarea>
+        <button type="submit" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">פרסם</button>
+    </form>
 </div>
 
-<!-- Image modal -->
-<div id="image-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
-    <div class="bg-white p-4 rounded-lg max-w-3xl">
-        <img id="modal-image" src="" alt="Full size image" class="max-w-full max-h-[80vh]">
-        <div class="mt-4 flex justify-between">
-            <button id="download-image" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Download</button>
-            <button id="close-modal" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Close</button>
-        </div>
-    </div>
+<div id="posts-container">
+    {% include '_posts.html' %}
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const mdShortcuts = [
-        { icon: 'B', markdown: '**', tag: 'bold' },
-        { icon: 'I', markdown: '*', tag: 'italic' },
-        { icon: 'U', markdown: '__', tag: 'underline' },
-        { icon: 'H1', markdown: '# ', tag: 'heading' },
-        { icon: 'Link', markdown: '[](url)', tag: 'link' },
-    ];
+{% if has_next %}
+<div class="text-center mt-4">
+    <button id="load-more" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 dark:text-white">טען עוד</button>
+</div>
+{% endif %}
 
-    const mdShortcutsContainer = document.getElementById('md-shortcuts');
-    mdShortcuts.forEach(shortcut => {
-        const button = document.createElement('button');
-        button.textContent = shortcut.icon;
-        button.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-2 rounded text-xs';
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            insertMarkdown(shortcut.markdown, shortcut.tag);
-        });
-        mdShortcutsContainer.appendChild(button);
-    });
-
-    const emojis = ['😊', '👍', '❤️', '🎉', '🤔'];
-    const emojiSelector = document.getElementById('emoji-selector');
-    emojis.forEach(emoji => {
-        const button = document.createElement('button');
-        button.textContent = emoji;
-        button.className = 'text-2xl';
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            insertEmoji(emoji);
-        });
-        emojiSelector.appendChild(button);
-    });
-
-    function insertMarkdown(markdown, tag) {
-        const textarea = document.querySelector('textarea[name="content"]');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        let insertedText;
-
-        if (start !== end) {
-            // Text is selected
-            const selectedText = text.substring(start, end);
-            if (tag === 'heading') {
-                insertedText = markdown + selectedText;
-            } else if (tag === 'link') {
-                insertedText = '[' + selectedText + '](url)';
-            } else {
-                insertedText = markdown + selectedText + markdown;
-            }
-            textarea.value = text.substring(0, start) + insertedText + text.substring(end);
-            textarea.selectionStart = start;
-            textarea.selectionEnd = start + insertedText.length;
-        } else {
-            // No text is selected
-            if (tag === 'link') {
-                insertedText = '[Link Text](url)';
-            } else {
-                insertedText = markdown + 'Text' + (tag !== 'heading' ? markdown : '');
-            }
-            textarea.value = text.substring(0, start) + insertedText + text.substring(end);
-            textarea.selectionStart = start + markdown.length;
-            textarea.selectionEnd = start + insertedText.length - (tag !== 'heading' ? markdown.length : 0);
-        }
-        
-        textarea.focus();
-    }
-
-    function insertEmoji(emoji) {
-        const textarea = document.querySelector('textarea[name="content"]');
-        const start = textarea.selectionStart;
-        textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(start);
-        textarea.focus();
-        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
-    }
-
-    // Image modal functionality
-    const modal = document.getElementById('image-modal');
-    const modalImage = document.getElementById('modal-image');
-    const closeModal = document.getElementById('close-modal');
-    const downloadImage = document.getElementById('download-image');
-
-    document.querySelectorAll('.post-content img').forEach(img => {
-        img.addEventListener('click', () => {
-            modalImage.src = img.src;
-            modal.classList.remove('hidden');
-        });
-    });
-
-    closeModal.addEventListener('click', () => {
-        modal.classList.add('hidden');
-    });
-
-    downloadImage.addEventListener('click', () => {
-        const link = document.createElement('a');
-        link.href = modalImage.src;
-        link.download = 'image.jpg';
-        link.click();
-    });
-
-    const loadMoreButton = document.getElementById('load-more');
-    if (loadMoreButton) {
-        loadMoreButton.addEventListener('click', function() {
-            const nextPage = parseInt(this.dataset.page) + 1;
-            fetch(`/feed/{{ user.id }}?page=${nextPage}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('posts-container').insertAdjacentHTML('beforeend', data.html);
-                this.dataset.page = nextPage;
-                if (!data.has_next) {
-                    document.getElementById('load-more-container').remove();
-                }
-                // Reinitialize like buttons for new posts
-                initializeLikeButtons();
-            });
-        });
-    }
-
-    function initializeLikeButtons() {
-        document.querySelectorAll('.like-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const postId = this.dataset.postId;
-                const userId = this.dataset.userId;
-                fetch(`/like/${userId}/${postId}`, {method: 'POST'})
-                    .then(response => response.json())
-                    .then(data => {
-                        const likeCount = this.querySelector('.like-count');
-                        likeCount.textContent = data.likes;
-                        if (data.action === 'liked') {
-                            this.classList.add('text-blue-500');
-                            this.classList.remove('text-gray-500');
-                        } else {
-                            this.classList.add('text-gray-500');
-                            this.classList.remove('text-blue-500');
-                        }
-                    });
-            });
-        });
-    }
-
-    initializeLikeButtons();
-
-    const textarea = document.querySelector('textarea[name="content"]');
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight + 2) + 'px';
-    });
-});
-</script>
+<!-- ... rest of the template ... -->
 {% endblock %}

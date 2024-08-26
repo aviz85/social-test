@@ -117,13 +117,14 @@ def like_post(user_id, post_id):
     
     if existing_like:
         db.session.delete(existing_like)
-        db.session.commit()
-        return jsonify({'likes': len(post.likes), 'action': 'unliked'})
+        action = 'unliked'
     else:
         new_like = Like(user_id=user.id, post_id=post.id)
         db.session.add(new_like)
-        db.session.commit()
-        return jsonify({'likes': len(post.likes), 'action': 'liked'})
+        action = 'liked'
+    
+    db.session.commit()
+    return jsonify({'likes': len(post.likes), 'action': action})
 
 @app.route('/comment/<int:user_id>/<int:post_id>', methods=['POST'])
 def add_comment(user_id, post_id):

@@ -6,10 +6,56 @@
     <title>מיני רשת חברתית</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {},
+            },
+        }
+    </script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <nav class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">מיני רשת חברתית</a>
+            <button id="darkModeToggle" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded-md">
+                <span class="dark:hidden">🌙</span>
+                <span class="hidden dark:inline">☀️</span>
+            </button>
+        </div>
+    </nav>
     <div class="container mx-auto px-4 py-8">
         {% block content %}{% endblock %}
     </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+        
+        function setDarkMode(isDark) {
+            html.classList.toggle('dark', isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', () => {
+                const isDark = !html.classList.contains('dark');
+                setDarkMode(isDark);
+                console.log('Dark mode toggled:', isDark);
+            });
+        } else {
+            console.error('Dark mode toggle button not found');
+        }
+
+        // Check for saved theme preference or use default (light)
+        const theme = localStorage.getItem('theme');
+        setDarkMode(theme === 'dark');
+
+        console.log('Dark mode script loaded and executed');
+    });
+    </script>
+    <script src="{{ url_for('static', filename='js/likes.js') }}"></script>
 </body>
 </html>
