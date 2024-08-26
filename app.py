@@ -2,15 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
-from dotenv import load_dotenv
 from flask_paginate import Pagination, get_page_parameter
 from flask_migrate import Migrate
 from markdown import markdown
 import bleach
 from bleach_allowlist import markdown_tags, markdown_attrs
-
-# Load environment variables
-load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
