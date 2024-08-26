@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "repl-nix-social-test"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "^3.0.3"
+pytest = "^8.3.2"
+python-dotenv = "^1.0.1"
+bleach = "^6.1.0"
+flask-migrate = "^4.0.7"
+markdown = "^3.7"
+sqlalchemy = "^2.0.32"
+flask-sqlalchemy = "^3.1.1"
+bleach-allowlist = "^1.0.3"
+flask-paginate = "^2024.4.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
