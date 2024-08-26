@@ -10,66 +10,194 @@
     <div class="mb-8 bg-white shadow-md rounded-lg p-6">
         <h2 class="text-xl font-semibold mb-4">יצירת פוסט חדש</h2>
         <form method="POST">
-            <textarea name="content" rows="3" required placeholder="מה בראש שלך?"
-                      class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" required></textarea>
+            <div class="relative">
+                <textarea name="content" rows="3" required placeholder="מה בראש שלך?"
+                          class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none mb-8" required></textarea>
+                <div id="md-shortcuts" class="absolute bottom-2 left-2 flex space-x-2">
+                    <!-- Markdown shortcuts will be added here -->
+                </div>
+                <div id="emoji-selector" class="absolute bottom-2 right-2">
+                    <!-- Emoji selector will be added here -->
+                </div>
+            </div>
             <button type="submit" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">פרסם</button>
         </form>
     </div>
 
-    <div class="space-y-6">
-        {% for post in posts %}
-            <div class="bg-white shadow-md rounded-lg p-6">
-                <div class="flex items-center mb-4">
-                    <a href="{{ url_for('profile', user_id=post.author.id) }}" class="font-bold text-lg hover:text-blue-500">{{ post.author.name }}</a>
-                    <div class="text-gray-500 text-sm mr-2">{{ post.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
-                </div>
-                <p class="text-gray-800">{{ post.content }}</p>
-                <div class="mt-4 flex items-center">
-                    <button class="like-button flex items-center text-gray-500 hover:text-blue-500" data-post-id="{{ post.id }}" data-user-id="{{ user.id }}">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
-                        </svg>
-                        <span class="like-count">{{ post.likes|length }}</span>
-                    </button>
-                </div>
-                <div class="mt-4">
-                    <h3 class="font-semibold mb-2">תגובות:</h3>
-                    {% for comment in post.comments %}
-                        <div class="bg-gray-100 p-2 rounded mb-2">
-                            <p class="text-sm"><strong>{{ comment.author.name }}</strong>: {{ comment.content }}</p>
-                        </div>
-                    {% endfor %}
-                    <form method="POST" action="{{ url_for('add_comment', user_id=user.id, post_id=post.id) }}" class="mt-2">
-                        <input type="text" name="content" placeholder="הוסף תגובה..." class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" required>
-                        <button type="submit" class="mt-2 px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">הגב</button>
-                    </form>
-                </div>
-            </div>
-        {% endfor %}
+    <div id="posts-container" class="space-y-6">
+        {% include '_posts.html' %}
+    </div>
+
+    {% if has_next %}
+    <div id="load-more-container" class="mt-8 text-center">
+        <button id="load-more" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300" data-page="{{ page }}">טען עוד פוסטים</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Image modal -->
+<div id="image-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+    <div class="bg-white p-4 rounded-lg max-w-3xl">
+        <img id="modal-image" src="" alt="Full size image" class="max-w-full max-h-[80vh]">
+        <div class="mt-4 flex justify-between">
+            <button id="download-image" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Download</button>
+            <button id="close-modal" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Close</button>
+        </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const likeButtons = document.querySelectorAll('.like-button');
-    likeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const postId = this.dataset.postId;
-            const userId = this.dataset.userId;
-            fetch(`/like/${userId}/${postId}`, {method: 'POST'})
-                .then(response => response.json())
-                .then(data => {
-                    const likeCount = this.querySelector('.like-count');
-                    likeCount.textContent = data.likes;
-                    if (data.action === 'liked') {
-                        this.classList.add('text-blue-500');
-                        this.classList.remove('text-gray-500');
-                    } else {
-                        this.classList.add('text-gray-500');
-                        this.classList.remove('text-blue-500');
-                    }
-                });
+    const mdShortcuts = [
+        { icon: 'B', markdown: '**', tag: 'bold' },
+        { icon: 'I', markdown: '*', tag: 'italic' },
+        { icon: 'U', markdown: '__', tag: 'underline' },
+        { icon: 'H1', markdown: '# ', tag: 'heading' },
+        { icon: 'Link', markdown: '[](url)', tag: 'link' },
+    ];
+
+    const mdShortcutsContainer = document.getElementById('md-shortcuts');
+    mdShortcuts.forEach(shortcut => {
+        const button = document.createElement('button');
+        button.textContent = shortcut.icon;
+        button.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-2 rounded text-xs';
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            insertMarkdown(shortcut.markdown, shortcut.tag);
         });
+        mdShortcutsContainer.appendChild(button);
+    });
+
+    const emojis = ['😊', '👍', '❤️', '🎉', '🤔'];
+    const emojiSelector = document.getElementById('emoji-selector');
+    emojis.forEach(emoji => {
+        const button = document.createElement('button');
+        button.textContent = emoji;
+        button.className = 'text-2xl';
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            insertEmoji(emoji);
+        });
+        emojiSelector.appendChild(button);
+    });
+
+    function insertMarkdown(markdown, tag) {
+        const textarea = document.querySelector('textarea[name="content"]');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        let insertedText;
+
+        if (start !== end) {
+            // Text is selected
+            const selectedText = text.substring(start, end);
+            if (tag === 'heading') {
+                insertedText = markdown + selectedText;
+            } else if (tag === 'link') {
+                insertedText = '[' + selectedText + '](url)';
+            } else {
+                insertedText = markdown + selectedText + markdown;
+            }
+            textarea.value = text.substring(0, start) + insertedText + text.substring(end);
+            textarea.selectionStart = start;
+            textarea.selectionEnd = start + insertedText.length;
+        } else {
+            // No text is selected
+            if (tag === 'link') {
+                insertedText = '[Link Text](url)';
+            } else {
+                insertedText = markdown + 'Text' + (tag !== 'heading' ? markdown : '');
+            }
+            textarea.value = text.substring(0, start) + insertedText + text.substring(end);
+            textarea.selectionStart = start + markdown.length;
+            textarea.selectionEnd = start + insertedText.length - (tag !== 'heading' ? markdown.length : 0);
+        }
+        
+        textarea.focus();
+    }
+
+    function insertEmoji(emoji) {
+        const textarea = document.querySelector('textarea[name="content"]');
+        const start = textarea.selectionStart;
+        textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(start);
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+    }
+
+    // Image modal functionality
+    const modal = document.getElementById('image-modal');
+    const modalImage = document.getElementById('modal-image');
+    const closeModal = document.getElementById('close-modal');
+    const downloadImage = document.getElementById('download-image');
+
+    document.querySelectorAll('.post-content img').forEach(img => {
+        img.addEventListener('click', () => {
+            modalImage.src = img.src;
+            modal.classList.remove('hidden');
+        });
+    });
+
+    closeModal.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    downloadImage.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.href = modalImage.src;
+        link.download = 'image.jpg';
+        link.click();
+    });
+
+    const loadMoreButton = document.getElementById('load-more');
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', function() {
+            const nextPage = parseInt(this.dataset.page) + 1;
+            fetch(`/feed/{{ user.id }}?page=${nextPage}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('posts-container').insertAdjacentHTML('beforeend', data.html);
+                this.dataset.page = nextPage;
+                if (!data.has_next) {
+                    document.getElementById('load-more-container').remove();
+                }
+                // Reinitialize like buttons for new posts
+                initializeLikeButtons();
+            });
+        });
+    }
+
+    function initializeLikeButtons() {
+        document.querySelectorAll('.like-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                const userId = this.dataset.userId;
+                fetch(`/like/${userId}/${postId}`, {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        const likeCount = this.querySelector('.like-count');
+                        likeCount.textContent = data.likes;
+                        if (data.action === 'liked') {
+                            this.classList.add('text-blue-500');
+                            this.classList.remove('text-gray-500');
+                        } else {
+                            this.classList.add('text-gray-500');
+                            this.classList.remove('text-blue-500');
+                        }
+                    });
+            });
+        });
+    }
+
+    initializeLikeButtons();
+
+    const textarea = document.querySelector('textarea[name="content"]');
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight + 2) + 'px';
     });
 });
 </script>

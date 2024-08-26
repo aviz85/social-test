@@ -1,0 +1,85 @@
+/* Custom styles for markdown content */
+.post-content h1 { @apply text-3xl font-bold mb-4; }
+.post-content h2 { @apply text-2xl font-bold mb-3; }
+.post-content h3 { @apply text-xl font-bold mb-2; }
+.post-content h4 { @apply text-lg font-bold mb-2; }
+.post-content h5 { @apply text-base font-bold mb-2; }
+.post-content h6 { @apply text-sm font-bold mb-2; }
+.post-content p { @apply mb-4; }
+.post-content ul { @apply list-disc list-inside mb-4; }
+.post-content ol { @apply list-decimal list-inside mb-4; }
+.post-content a { @apply text-blue-600 no-underline hover:underline; }
+.post-content img { @apply max-w-full h-auto rounded-lg shadow-md; }
+.post-content blockquote { @apply border-l-4 border-gray-300 pl-4 italic my-4; }
+.post-content pre { @apply bg-gray-100 p-2 rounded my-4 overflow-x-auto; }
+.post-content code { @apply bg-gray-100 p-1 rounded; }
+
+/* Ensure h1 is styled properly outside of post-content as well */
+h1 { @apply text-3xl font-bold mb-4; }
+
+/* Styles for clickable links */
+a[href^="http"], a[href^="www."] {
+    @apply text-blue-600 no-underline hover:underline;
+}
+
+/* Pagination styles */
+.pagination-page-info {
+    @apply text-center text-gray-600 mb-4;
+}
+
+.pagination {
+    @apply flex justify-center items-center space-x-2;
+}
+
+.pagination .page-item {
+    @apply inline-block;
+}
+
+.pagination .page-link {
+    @apply px-3 py-2 bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 rounded-md transition duration-300;
+}
+
+.pagination .active .page-link {
+    @apply bg-blue-500 text-white border-blue-500;
+}
+
+.pagination .disabled .page-link {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+/* Additional styles for better appearance */
+body {
+    @apply bg-gray-100;
+}
+
+.like-button {
+    @apply transition duration-300;
+}
+
+.like-button:hover {
+    @apply transform scale-110;
+}
+
+textarea, input[type="text"] {
+    @apply transition duration-300 ease-in-out;
+}
+
+textarea:focus, input[type="text"]:focus {
+    @apply ring-2 ring-blue-300;
+}
+
+button[type="submit"] {
+    @apply transition duration-300 ease-in-out;
+}
+
+button[type="submit"]:hover {
+    @apply transform scale-105;
+}
+
+#load-more {
+    @apply transition duration-300 ease-in-out;
+}
+
+#load-more:hover {
+    @apply transform scale-105;
+}

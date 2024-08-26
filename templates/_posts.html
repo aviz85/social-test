@@ -1,0 +1,29 @@
+{% for post in posts %}
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <div class="flex items-center mb-4">
+            <a href="{{ url_for('profile', user_id=post.author.id) }}" class="font-bold text-lg hover:text-blue-500">{{ post.author.name }}</a>
+            <div class="text-gray-500 text-sm mr-2">{{ post.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+        </div>
+        <div class="post-content">{{ post.rendered_content | safe }}</div>
+        <div class="mt-4 flex items-center">
+            <button class="like-button flex items-center text-gray-500 hover:text-blue-500" data-post-id="{{ post.id }}" data-user-id="{{ user.id }}">
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                </svg>
+                <span class="like-count">{{ post.likes|length }}</span>
+            </button>
+        </div>
+        <div class="mt-4">
+            <h3 class="font-semibold mb-2">תגובות:</h3>
+            {% for comment in post.comments %}
+                <div class="bg-gray-100 p-2 rounded mb-2">
+                    <p class="text-sm"><strong>{{ comment.author.name }}</strong>: {{ comment.content }}</p>
+                </div>
+            {% endfor %}
+            <form method="POST" action="{{ url_for('add_comment', user_id=user.id, post_id=post.id) }}" class="mt-2">
+                <input type="text" name="content" placeholder="הוסף תגובה..." class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" required>
+                <button type="submit" class="mt-2 px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">הגב</button>
+            </form>
+        </div>
+    </div>
+{% endfor %}
