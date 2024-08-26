@@ -20,6 +20,7 @@ class User(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     posts = db.relationship('Post', backref='author', lazy=True)
     likes = db.relationship('Like', backref='user', lazy=True)
+    comments = db.relationship('Comment', backref='author', lazy=True)
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -27,9 +28,17 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     likes = db.relationship('Like', backref='post', lazy=True)
+    comments = db.relationship('Comment', backref='post', lazy=True)
 
 class Like(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
 
@@ -75,6 +84,28 @@ def like_post(user_id, post_id):
         db.session.add(new_like)
         db.session.commit()
         return jsonify({'likes': len(post.likes), 'action': 'liked'})
+
+@app.route('/comment/<int:user_id>/<int:post_id>', methods=['POST'])
+def add_comment(user_id, post_id):
+    user = User.query.get_or_404(user_id)
+    post = Post.query.get_or_404(post_id)
+    content = request.form['content']
+    comment = Comment(content=content, author=user, post=post)
+    db.session.add(comment)
+    db.session.commit()
+    return redirect(url_for('feed', user_id=user.id))
+
+@app.route('/profile/<int:user_id>')
+def profile(user_id):
+    user = User.query.get_or_404(user_id)
+    posts_count = Post.query.filter_by(user_id=user.id).count()
+    comments_count = Comment.query.filter_by(user_id=user.id).count()
+    likes_given = Like.query.filter_by(user_id=user.id).count()
+    likes_received = sum(len(post.likes) for post in user.posts)
+    posts = Post.query.filter_by(user_id=user.id).order_by(Post.created_at.desc()).all()
+    return render_template('profile.html', user=user, posts_count=posts_count, 
+                           comments_count=comments_count, likes_given=likes_given, 
+                           likes_received=likes_received, posts=posts)
 
 if __name__ == '__main__':
     with app.app_context():
