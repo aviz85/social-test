@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+    <div class="md:flex">
+        <div class="p-8">
+            <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">ברוכים הבאים</div>
+            <h1 class="block mt-1 text-lg leading-tight font-medium text-black">הזן את שמך או בחר משתמש קיים</h1>
+            <form method="POST" class="mt-4">
+                <input type="text" name="user_name" placeholder="שם משתמש" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <button type="submit" class="mt-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    כניסה
+                </button>
+            </form>
+            {% if users %}
+                <div class="mt-6">
+                    <h2 class="text-sm font-medium text-gray-900">משתמשים קיימים:</h2>
+                    <ul class="mt-2 space-y-2">
+                        {% for user in users %}
+                            <li>
+                                <a href="{{ url_for('feed', user_id=user.id) }}" class="text-indigo-600 hover:text-indigo-900">{{ user.name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
