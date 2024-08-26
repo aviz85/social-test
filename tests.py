@@ -1,5 +1,5 @@
 import pytest
-from app import app, db, User, Post
+from app import app, db, User, Post, Like
 import warnings
 from sqlalchemy.exc import SAWarning
 
@@ -52,3 +52,25 @@ def test_feed_page(client):
         assert response.status_code == 200
         assert b'Test User' in response.data
         assert b'Test post content' in response.data
+
+def test_like_post(client):
+    with app.app_context():
+        # Create a user and a post
+        client.post('/', data={'user_name': 'Test User'}, follow_redirects=True)
+        user = User.query.filter_by(name='Test User').first()
+        client.post(f'/feed/{user.id}', data={'content': 'Test post content'}, follow_redirects=True)
+        post = Post.query.filter_by(content='Test post content').first()
+
+        # Like the post
+        response = client.post(f'/like/{user.id}/{post.id}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['likes'] == 1
+        assert data['action'] == 'liked'
+
+        # Unlike the post
+        response = client.post(f'/like/{user.id}/{post.id}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['likes'] == 0
+        assert data['action'] == 'unliked'
